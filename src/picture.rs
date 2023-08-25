@@ -6,6 +6,7 @@ use std::borrow::Borrow;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
+use crate::PackedHeader;
 use crate::bindings;
 use crate::buffer::Buffer;
 use crate::context::Context;
@@ -149,6 +150,12 @@ impl<T> Picture<PictureNew, T> {
     /// Add `buffer` to the picture.
     pub fn add_buffer(&mut self, buffer: Buffer) {
         self.inner.buffers.push(buffer);
+    }
+
+    /// Add [`PackedHeader`] to the picture.
+    pub fn add_packed_header(&mut self, header: PackedHeader) {
+        self.inner.buffers.push(header.parameter);
+        self.inner.buffers.push(header.data);
     }
 
     /// Wrapper around `vaBeginPicture`.

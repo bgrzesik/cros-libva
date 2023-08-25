@@ -531,3 +531,74 @@ pub enum EncMiscParameter {
     /// Wrapper over `VAEncMiscParameterBuffer` with `VAEncMiscParameterQuantization`.
     Quantization(EncMiscParameterQuantization),
 }
+
+#[repr(u32)]
+pub enum PackedHeaderType {
+    Sequence = bindings::VAEncPackedHeaderType::VAEncPackedHeaderSequence,
+    Picture = bindings::VAEncPackedHeaderType::VAEncPackedHeaderPicture,
+    Slice = bindings::VAEncPackedHeaderType::VAEncPackedHeaderSlice,
+    RawData = bindings::VAEncPackedHeaderType::VAEncPackedHeaderRawData,
+}
+
+pub struct PackedHeader {
+    /// [`Buffer`] with VAEncPackedHeaderParameterBuffer
+    pub(crate) parameter: Buffer,
+    /// [`Buffer`] with header contents
+    pub(crate) data: Buffer,
+}
+
+impl PackedHeader {
+    pub(crate) fn new(
+        context: Rc<Context>,
+        type_: PackedHeaderType,
+        data: &[u8],
+        bit_length: usize,
+        has_emulation_bytes: bool,
+    ) -> Result<PackedHeader, VaError> {
+        let mut header = bindings::VAEncPackedHeaderParameterBuffer {
+            type_: type_ as u32,
+            bit_length: bit_length as u32,
+            has_emulation_bytes: has_emulation_bytes as u8,
+            va_reserved: Default::default(),
+        };
+
+        let mut header_buf_id: u32 = 0;
+
+        va_check(unsafe {
+            bindings::vaCreateBuffer(
+                context.display().handle(),
+                context.id(),
+                bindings::VABufferType::VAEncPackedHeaderParameterBufferType,
+                std::mem::size_of_val(&header) as u32,
+                1,
+                &mut header as *mut _ as *mut std::ffi::c_void,
+                &mut header_buf_id,
+            )
+        })?;
+
+        let mut data_buf_id: u32 = 0;
+
+        va_check(unsafe {
+            bindings::vaCreateBuffer(
+                context.display().handle(),
+                context.id(),
+                bindings::VABufferType::VAEncPackedHeaderDataBufferType,
+                data.len() as u32,
+                1,
+                data.as_ptr() as *mut std::ffi::c_void,
+                &mut data_buf_id,
+            )
+        })?;
+
+        Ok(Self {
+            parameter: Buffer {
+                context: Rc::clone(&context),
+                id: header_buf_id,
+            },
+            data: Buffer {
+                context: Rc::clone(&context),
+                id: data_buf_id,
+            },
+        })
+    }
+}

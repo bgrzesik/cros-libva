@@ -13,6 +13,8 @@ use crate::display::Display;
 use crate::va_check;
 use crate::Config;
 use crate::EncCodedBuffer;
+use crate::PackedHeader;
+use crate::PackedHeaderType;
 use crate::Surface;
 use crate::SurfaceMemoryDescriptor;
 use crate::VaError;
@@ -80,12 +82,30 @@ impl Context {
 
     /// Create a new buffer of type `type_`.
     pub fn create_buffer(self: &Rc<Self>, type_: BufferType) -> Result<Buffer, VaError> {
+        // We don't want to expose this. It should be created from a `Picture`
+        // instead.
+        assert!(!matches!(type_, BufferType::EncCodedBuffer(_)));
         Buffer::new(Rc::clone(self), type_)
     }
 
-    /// Create a new buffer of type `type_`.
     pub fn create_enc_coded(self: &Rc<Self>, size: usize) -> Result<EncCodedBuffer, VaError> {
         EncCodedBuffer::new(Rc::clone(self), size)
+    }
+
+    pub fn create_packed_header(
+        self: &Rc<Self>,
+        type_: PackedHeaderType,
+        data: &[u8],
+        bit_length: usize,
+        has_emulation_bytes: bool,
+    ) -> Result<PackedHeader, VaError> {
+        PackedHeader::new(
+            Rc::clone(self),
+            type_,
+            data,
+            bit_length,
+            has_emulation_bytes,
+        )
     }
 }
 

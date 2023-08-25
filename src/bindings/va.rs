@@ -652,6 +652,23 @@ pub mod VAEncMiscParameterType {
     pub const VAEncMiscParameterTypeFEIFrameControl: Type = 18;
     pub const VAEncMiscParameterTypeExtensionData: Type = 19;
 }
+pub mod VAEncPackedHeaderType {
+    pub type Type = ::std::os::raw::c_uint;
+    pub const VAEncPackedHeaderSequence: Type = 1;
+    pub const VAEncPackedHeaderPicture: Type = 2;
+    pub const VAEncPackedHeaderSlice: Type = 3;
+    pub const VAEncPackedHeaderRawData: Type = 4;
+    pub const VAEncPackedHeaderMiscMask: Type = 2147483648;
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+pub struct _VAEncPackedHeaderParameterBuffer {
+    pub type_: u32,
+    pub bit_length: u32,
+    pub has_emulation_bytes: u8,
+    pub va_reserved: [u32; 4usize],
+}
+pub type VAEncPackedHeaderParameterBuffer = _VAEncPackedHeaderParameterBuffer;
 #[repr(C)]
 #[derive(Debug)]
 pub struct _VAEncMiscParameterBuffer {
